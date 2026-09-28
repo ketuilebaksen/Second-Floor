@@ -1,0 +1,111 @@
+SECOND FLOOR — KANAL KURULUMU
+==============================
+
+Takim: Pittsburgh Steelers | Stadyum: Acrisure Stadium | Renk: Steelers altini + siyah
+Kadro 2026 sezonuna gore: Aaron Rodgers, DK Metcalf, Michael Pittman Jr.,
+T.J. Watt, Cameron Heyward, Jalen Ramsey — bas antrenor MIKE McCARTHY.
+
+NOT — KOC DEGISTI
+Steelers 2006'dan beri ilk kez Mike Tomlin'siz sezona girdi; 2026'da bas
+antrenor Mike McCarthy, genel menajer Omar Khan. Kadroyu Steelers.com'un
+resmi sayfasindan ve 2026 sezon kaydindan aldim.
+
+Bu paket 49ers paketinin aynisi — coklu stok havuzu (broll, broll2, broll3...)
+destegi icinde hazir geliyor. Kuyruk SES DOSYASI kabul ediyor; yanlislikla
+birakilan bir .txt sessizce yok sayilir, render'i kirmaz.
+
+
+ADIM 1 — YENI DEPO AC
+---------------------
+github.com -> sag ustte + -> New repository
+  Repository name : second-floor
+  Public sec        (Private'ta depolama doluyor)
+  Add a README      -> ISARETLEME
+  Create repository
+
+README'yi isaretlersen push "unrelated histories" hatasi verir — Rams ve
+Alabama'da bu olmustu.
+
+
+ADIM 2 — BILGISAYARINA INDIR
+----------------------------
+Acilan sayfada  Code -> Open with GitHub Desktop
+
+
+ADIM 3 — DOSYALARI KOPYALA
+--------------------------
+Bu zip'in icindekilerin hepsini (OKU.txt haric) o klasore KOPYALA.
+Ctrl+A -> Ctrl+C -> klasorde Ctrl+V.   Ctrl+X KULLANMA.
+
+Dogru kopyaladiysan klasorde sunlar olur:
+  .git  .github  assets  content  scripts  .gitignore  channel.json
+
+README ya da .gitattributes goruyorsan yanlis kaynaktan kopyalamissin.
+.github ve content klasorleri Windows'ta gizli gorunebilir — Explorer'da
+"Hidden items" kutusunu ac, oradalar.
+
+
+ADIM 4 — GONDER
+---------------
+GitHub Desktop -> Current repository: second-floor oldugundan EMIN OL
+Summary: "ilk kurulum" -> Commit to main -> Push origin
+
+
+ADIM 5 — IZIN (sart)
+--------------------
+Settings -> Actions -> General -> en altta "Workflow permissions"
+"Read and write permissions" sec -> Save
+
+Bu olmadan video render edilir ama Release'e yuklenemez.
+API anahtarina GEREK YOK — sesi kendi programin uretiyor.
+
+
+ADIM 6 — STOK VIDEOLARI YUKLE
+-----------------------------
+Releases -> Create a new release
+  Tag    : broll     (kutuya yaz, "Create new tag" cikacak, tikla)
+  Title  : broll
+  Dosya  : Steelers stok videolarini surukle
+  ---> "Publish release"   ("Save draft" e BASMA)
+
+Bir release'e ~1000 dosya siginiyor. Doldugunda broll2, broll3 diye devam
+et — sistem broll ile baslayan butun release'leri kendiliginden tariyor,
+ek ayar gerekmiyor.
+
+Istege bagli ayni yontemle:
+  music     arka plan muzikleri
+  ambient   stadyum ugultusu
+  photos    oyuncu / takim fotograflari
+
+
+ADIM 7 — ILK VIDEO
+------------------
+Ses otomasyonunda Second Floor'u kanal listesine ekle (depo adi:
+second-floor). Program metni seslendirip mp3'u content/queue icine
+yazacak ve kendi push'unu atacak.
+
+Elle yapmak istersen: mp3'u content/queue icine at, dosya adi videonun
+basligi olsun, commit + push.
+
+Render kaydinda ("Stok havuzlarini indir" ve "Videoyu kur" satirlarinda):
+  [assemble] b-roll: 240 clips (offset 1)
+  [assemble] kurgu karisimi: 34 stok video / 0 fotograf / ... (stok %100)
+
+"b-roll: 0 clips" yaziyorsa broll release'i taslakta kalmis demektir.
+
+
+ISTEGE BAGLI — TEK OYUNCUYA OZEL HAVUZ
+--------------------------------------
+Bu pakette NFL Tunnel'in oyuncu havuzu ozelligi de var. Bir videoda sadece
+belirli klipler kullanilsin istersen:
+  Release tag : oyuncu-tj-watt      (ya da takim-pittsburgh-steelers)
+  Icine en az 12 klip koy, Publish et.
+Metinde o isim en cok geciyorsa video sadece o havuzdan kurulur.
+12'nin altinda kalirsa eksigi genel broll'dan tamamlar.
+
+
+ISTEGE BAGLI — HAREKETLI GRAFIKLER
+----------------------------------
+motion-lib.yml de icinde. Actions -> motion-lib -> Run workflow (bir kez,
+~1,5 saat), sonra channel.json'a "motion_rate": 0.12 ekle. Acele etme,
+once kanal normal calissin.
