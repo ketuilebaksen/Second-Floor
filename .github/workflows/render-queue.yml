@@ -19,6 +19,14 @@ permissions:
   contents: write
   issues: write
 
+# Ayni anda tek render turu: ust uste gelen push'lar ayni videoyu iki kez
+# kuruyor, stok kutuphanesi indirmesi (1700+ dosya) reponun saatlik GitHub
+# istek hakkini bitiriyor ve Release adimi 403 ile dusuyordu (28-30 Eylul).
+# Bekleyen tur, oncekinin yayinladigi videolari "zaten var" diye atlar.
+concurrency:
+  group: render-queue
+  cancel-in-progress: false
+
 jobs:
   plan:
     runs-on: ubuntu-latest
@@ -194,11 +202,35 @@ jobs:
           # Ayni ses dosyasi icin iki calistirma ust uste gelirse ikincisi
           # "tag already exists" ile duserdi ve hazir video cope giderdi.
           # Surum zaten varsa dosyayi onun uzerine ekliyoruz.
-          gh release create "${{ matrix.item.tag }}" $FILES \
-            -R "$GITHUB_REPOSITORY" -t "${{ matrix.item.title }}" \
-            -n "Hazir video ($SIZE).$NOTE Asagidaki dosyalara tikla." \
-          || gh release upload "${{ matrix.item.tag }}" $FILES \
-            -R "$GITHUB_REPOSITORY" --clobber
+          # Hata ciktisi dosyaya da yaziliyor: loglar oturum acmadan okunamiyor,
+          # asagidaki issue ise herkese acik; sebep orada gorunsun.
+          # 403 / rate limit: reponun saatlik istek hakki dolmus demek; video
+          # hazir, cope gitmesin diye 10 dk arayla bir saate kadar tekrar dene.
+          publish() {
+            gh release create "${{ matrix.item.tag }}" $FILES \
+              -R "$GITHUB_REPOSITORY" -t "${{ matrix.item.title }}" \
+              -n "Hazir video ($SIZE).$NOTE Asagidaki dosyalara tikla." \
+            || gh release upload "${{ matrix.item.tag }}" $FILES \
+              -R "$GITHUB_REPOSITORY" --clobber
+          }
+          OK=0
+          for TRY in 1 2 3 4 5 6 7; do
+            : > work/release_try.txt
+            if publish 2> >(tee work/release_try.txt >&2); then OK=1; break; fi
+            sleep 2
+            cat work/release_try.txt >> work/release_err.txt
+            grep -qiE "HTTP 403|HTTP 429|rate limit" work/release_try.txt || break
+            [ "$TRY" -lt 7 ] || break
+            echo "deneme $TRY: GitHub istek siniri, 10 dk sonra tekrar" | tee -a work/release_err.txt
+            sleep 600
+          done
+          if [ "$OK" != 1 ]; then
+            echo "boyut: $SIZE_B bayt" >> work/release_err.txt
+            df -h / >> work/release_err.txt
+            exit 1
+          fi
+          # basarili olduysa onceki denemelerin hatasi issue'ya yazilmasin
+          rm -f work/release_err.txt
           URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/${{ matrix.item.tag }}"
           echo "url=$URL" >> $GITHUB_OUTPUT
           {
@@ -220,6 +252,13 @@ jobs:
             echo ""
             echo "---"
             echo "**Videoyu indir:** ${{ steps.release.outputs.url }}"
+            if [ -s work/release_err.txt ]; then
+              echo ""
+              echo "**Release hatasi:**"
+              echo '```'
+              tail -c 3000 work/release_err.txt
+              echo '```'
+            fi
           } >> work/kapak_brief.md
           gh issue create -R "$GITHUB_REPOSITORY" \
             --title "VIDEO HAZIR — ${{ matrix.item.title }}" \
